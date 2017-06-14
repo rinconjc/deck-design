@@ -18,6 +18,7 @@
 (def height (+ 100 9 1.9))
 (def kitchen-lc (- width left-width))
 (def kitchen-rc (- kitchen-lc 330))
+(def post-side 9)
 
 (defn balcony-floor []
   (concrete-color
@@ -27,8 +28,8 @@
     (->> (cube left-width 110 15 :center false)
          (m/translate [kitchen-lc depth -15])))))
 
-(defn post [x y z]
-  (->> (cube 9 9 (+ height 10 (Math/abs z)) :center false)
+(defn post [x y z & {:keys [fence?] :or {fence? true}}]
+  (->> (cube post-side post-side (+ (if fence? (+ height 10) 0) (Math/abs z)) :center false)
        (m/translate [x y z])
        treated-pine-color))
 
@@ -37,14 +38,15 @@
        (m/translate [x (- y 4.5) 0])
        treated-pine-color))
 
-(defn joist [x size]
-  (->> (cube 4.5 size 9 :center false)
-       (m/translate [x 0 0])
+(defn joist
+  [x size & {:keys [h y z] :or {h 9 y 0 z 0}}]
+  (->> (cube 4.5 size h :center false)
+       (m/translate [x y z])
        treated-pine-color))
 
-(def bearer
-  (->> (cube (+ width 9) 4.5 19 :center false)
-       (m/translate [0 0 -10])
+(defn bearer [& {:keys [x y z] :or {x 0 y 0 z -5}}]
+  (->> (cube (+ width 9) 4.5 14 :center false)
+       (m/translate [x y z])
        treated-pine-color))
 
 (defn hand-rail-x [x y size]
@@ -58,7 +60,7 @@
        treated-pine-color))
 
 (defn decking [x y len [w h]]
-  (->>(cube len w h :center false)
+  (->>(cube (+ post-side len) w h :center false)
       (m/translate [x (- y w) 9])
       (decking-color)))
 
@@ -85,25 +87,72 @@
          (decking kitchen-rc y (- width kitchen-rc) [w h])
          (decking 0 y width [w h])))
      (for [y (range left-depth depth (- 0 w gap))]
-       (decking kitchen-lc y left-width [w h])))))
+       (if (> y (- left-depth 90))
+         (decking kitchen-lc y (+ 90 left-width) [w h])
+         (decking kitchen-lc y left-width [w h]))))))
 
 (defn joists []
   (apply union
-         (joist (+ width 4.5) left-depth)
-         (joist (+ width 45) 90)
-         (for [x (range 4)] (joist (* 45 x) right-depth))
-         (for [x (range 7)] (joist (+ kitchen-rc (* 45 x)) depth))
-         (for [x (range 3)] (joist (+ kitchen-lc (* 45 x)) left-depth))))
+         (joist (+ width 4.5) left-depth :h 14 :z -5)
+         (joist (+ width 45) 90 :y (- left-depth 90))
+         (joist (+ width 90) 90 :y (- left-depth 90))
+         (for [x (range 4)] (joist (* 45 x) right-depth :h 9 :z 0))
+         (for [x (range 7)] (joist (+ kitchen-rc (* 45 x)) depth :h 9 :z 0))
+         (for [x (range 3)] (joist (+ kitchen-lc (* 45 x)) left-depth :h 9 :z 0))))
 
 (defn stairs-south []
   (post width depth ))
 
+(defn furniture []
+  (let [chair (fn [] (m/difference
+                      (cube 72 75 90 :center false)
+                      (->> (cube 50 55 50 :center false)
+                           (m/translate [30 10 50]))))]
+    (union
+     (->> (cube 184 72 90 :center false)
+          (m/translate [220 60 10]))
+     (->> (cube 150 83 63 :center false)
+          (m/translate [230 150 10]))
+     (m/translate [140 155 10] (chair))
+     (->> (chair) (m/rotate [0 0 Math/PI])
+          (m/translate [470 230 10])))))
+
+(defn stairs [h & {:keys [step-height step-width width] :or {width 90}}]
+  (let [nh (Math/ceil (/ h 19))
+        wi (or step-width 24)
+        hi (/ h nh)]
+    (-> (for [i (range 1 (inc nh)) :let [y (* -1 i wi)
+                                         z (* -1 i hi)]]
+          (union (m/translate [0 y (+ z hi)] (cube width wi 2 :center false))
+                 (m/translate [0 y z] (cube width 2 hi :center false))))
+        (union (m/translate [0 (* -1 (inc nh) wi) (* -1 h)] (cube width wi 2 :center false)))
+        decking-color)))
+
+(def old-stairs
+  (->> (stairs 96 :step-height 16 :step-width 28)
+       (m/rotate [0 0 (* Math/PI 1.5)])
+       (m/translate [kitchen-rc (+ 90 right-depth) 0])))
+
+(def new-stairs
+  (m/translate [width (- left-depth 90) -5] (stairs 150 :step-width 26)))
+
+(defn wall [x y z h l]
+  (->> (cube l 20 h :center false)
+       (m/translate [x y z])))
+
+(def walls
+  (union
+   (wall 0 depth -110 310 kitchen-lc)
+   (wall kitchen-lc left-depth -150 360 (+ 100 left-width))
+   (->> (wall 0 0 -150 360 130)
+        (m/rotate [0 0 (* Math/PI 0.5)] )
+        (m/translate [kitchen-lc depth 0]))))
+
 (def deck
   (union
-   ;; (->> (m/polygon [[0 0] [width 0] [width left-depth] [(- width left-width) left-depth]
-   ;;                  [kitchen-lc depth] [kitchen-rc depth]
-   ;;                  [kitchen-rc right-depth] [0 right-depth]])
-   ;;      (m/color [0.9 0.9 0.9 0.3]))
+   walls
+   old-stairs
+   new-stairs
    (balcony-floor)
    (post 0 0 -110)
    (post width 0 -150)
@@ -114,7 +163,14 @@
    (post width (- left-depth 90 9) -150)
    (post (+ 90 width) (- left-depth 90 9) -150) ;; south-stair-south-post
    (post (+ 90 (- width 9)) (- left-depth 9) -150)
-   bearer
+   ;;extra posts
+   (post 0 118 -120 :fence? false)
+   (post 316 118 -120 :fence? false)
+   (post 632 118 -120 :fence? false)
+
+   (bearer)
+   (bearer :y 118 :z -14)
+   ;;(bearer :y 122.5 :z -14)
    (ledger 0 right-depth 170)
    (ledger kitchen-rc depth 330)
    (ledger kitchen-lc left-depth (+ left-width 90))
@@ -123,7 +179,9 @@
    (hand-rail-x 0 (- right-depth 4.5) 170)
    (hand-rail-y 0 0 right-depth)
    (hand-rail-y (- width 4.5) 0 (- left-depth 90 9))
-   (stringer-x 0 kitchen-rc right-depth 110 90)
+   (hand-rail-y (+ width 90) (- left-depth 90) 90)
+   ;; (stringer-x 0 kitchen-rc right-depth 110 90)
+   ;;(furniture)
    (joists)
    ;;(decking-board)
    ))
