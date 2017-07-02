@@ -1,36 +1,4 @@
-# cadtoy
+After trying several CAD and 3D modelling tools I found this little gem Openscad much easier to get started. Here's a sample images of my deck plan...
 
-FIXME: description
-
-## Installation
-
-Download from http://example.com/FIXME.
-
-## Usage
-
-FIXME: explanation
-
-    $ java -jar cadtoy-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
-
-## License
-
-Copyright © 2017 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+![3D view](resources/images/deck-3d.png)
+ 
