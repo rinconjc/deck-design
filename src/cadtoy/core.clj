@@ -8,6 +8,8 @@
 
 (def decking-color #(m/color [(/ 140 255) (/ 70 255) (/ 23 255) 1] %))
 (def concrete-color #(m/color [(/ 0xcc 255) (/ 0xcc 255) (/ 0xcc 255) 1] %))
+(def wall-color #(m/color [(/ 0xdd 255) (/ 0xcc 255) (/ 0xaf 255) 1] %))
+
 
 (def left-width 132)
 (def depth 400)
@@ -52,12 +54,12 @@
 (defn hand-rail-x [x y size]
   (->> (cube size 4.5 4.5 :center false)
        (m/translate [x y (- height 4.5)])
-       treated-pine-color))
+       decking-color))
 
 (defn hand-rail-y [x y size]
   (->> (cube 4.5 size 4.5 :center false)
        (m/translate [x y (- height 4.5)])
-       treated-pine-color))
+       decking-color))
 
 (defn decking [x y len [w h]]
   (->>(cube (+ post-side len) w h :center false)
@@ -141,12 +143,13 @@
        (m/translate [x y z])))
 
 (def walls
-  (union
-   (wall 0 depth -110 310 kitchen-lc)
-   (wall kitchen-lc left-depth -150 360 (+ 100 left-width))
-   (->> (wall 0 0 -150 360 130)
-        (m/rotate [0 0 (* Math/PI 0.5)] )
-        (m/translate [kitchen-lc depth 0]))))
+  (->> (union
+    (wall 0 depth -110 320 kitchen-lc)
+    (wall kitchen-lc left-depth -150 360 (+ 100 left-width))
+    (->> (wall 0 0 -150 360 130)
+         (m/rotate [0 0 (* Math/PI 0.5)] )
+         (m/translate [kitchen-lc depth 0])))
+       wall-color))
 
 (def deck
   (union
@@ -164,12 +167,13 @@
    (post (+ 90 width) (- left-depth 90 9) -150) ;; south-stair-south-post
    (post (+ 90 (- width 9)) (- left-depth 9) -150)
    ;;extra posts
-   (post 0 118 -120 :fence? false)
-   (post 316 118 -120 :fence? false)
-   (post 632 118 -120 :fence? false)
+   (post 0 130 -120 :fence? false)
+   (post 210 130 -120 :fence? false)
+   (post 420 130 -120 :fence? false)
+   (post 632 130 -120 :fence? false)
 
    (bearer)
-   (bearer :y 118 :z -14)
+   (bearer :y 130 :z -14)
    ;;(bearer :y 122.5 :z -14)
    (ledger 0 right-depth 170)
    (ledger kitchen-rc depth 330)
@@ -183,7 +187,7 @@
    ;; (stringer-x 0 kitchen-rc right-depth 110 90)
    ;;(furniture)
    (joists)
-   ;;(decking-board)
+   (decking-board)
    ))
 
 (spit "post-demo.scad"
