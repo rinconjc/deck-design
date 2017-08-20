@@ -4,12 +4,21 @@
              [model :as m :refer [cube cylinder sphere union]]
              [scad :refer [write-scad]]]))
 
+;; 17*16.05 + 17*5.15*4 + 17*6.15*3 = 272.85 + 350.2 + 313.65 = 936.38
+;; 100 = 11*3 + 6.6*4 = 33 + 26.4 = 59.6
+;; 138: 2x7.2 + 1x3.2 = 17.6
+;; 110 = 3X5.4x3 + 1x5.4 = 10x5.4
+;; 6.6 = 14x5.4
+;; bunnings : 316.44 + 286 + 241.92 = 844.36
+;; blackbutt : 75x6.98 = 524
+
 (def treated-pine-color #(m/color [(/ 153 255) (/ 113 255) (/ 87 255) 1] %))
 
 (def decking-color #(m/color [(/ 140 255) (/ 70 255) (/ 23 255) 1] %))
 (def concrete-color #(m/color [(/ 0xcc 255) (/ 0xcc 255) (/ 0xcc 255) 1] %))
 (def wall-color #(m/color [(/ 0xdd 255) (/ 0xcc 255) (/ 0xaf 255) 1] %))
 
+(def paint-color #(m/color [(/ 122 255) (/ 88 255) (/ 78 255) 1] %))
 
 (def left-width 132)
 (def depth 400)
@@ -31,9 +40,9 @@
          (m/translate [kitchen-lc depth -15])))))
 
 (defn post [x y z & {:keys [fence?] :or {fence? true}}]
-  (->> (cube post-side post-side (+ (if fence? (+ height 10) 0) (Math/abs z)) :center false)
+  (->> (cube post-side post-side (+ (if fence? height 0) (Math/abs z)) :center false)
        (m/translate [x y z])
-       treated-pine-color))
+       paint-color))
 
 (defn ledger [x y size]
   (->> (cube size 4.5 9 :center false)
@@ -52,14 +61,14 @@
        treated-pine-color))
 
 (defn hand-rail-x [x y size]
-  (->> (cube size 4.5 4.5 :center false)
-       (m/translate [x y (- height 4.5)])
-       decking-color))
+  (->> (cube size 13.8 3 :center false)
+       (m/translate [x (- y 2.4) (- height 3)])
+       paint-color))
 
 (defn hand-rail-y [x y size]
-  (->> (cube 4.5 size 4.5 :center false)
-       (m/translate [x y (- height 4.5)])
-       decking-color))
+  (->> (cube 13.8 size 3 :center false)
+       (m/translate [x y (- height 3)])
+       paint-color))
 
 (defn decking [x y len [w h]]
   (->>(cube (+ post-side len) w h :center false)
@@ -144,12 +153,52 @@
 
 (def walls
   (->> (union
-    (wall 0 depth -110 320 kitchen-lc)
-    (wall kitchen-lc left-depth -150 360 (+ 100 left-width))
-    (->> (wall 0 0 -150 360 130)
-         (m/rotate [0 0 (* Math/PI 0.5)] )
-         (m/translate [kitchen-lc depth 0])))
+        (wall 0 depth -110 320 kitchen-lc)
+        (wall kitchen-lc left-depth -150 360 (+ 100 left-width))
+        (->> (wall 0 0 -150 360 130)
+             (m/rotate [0 0 (* Math/PI 0.5)] )
+             (m/translate [kitchen-lc depth 0])))
        wall-color))
+
+(defn slate-x [x y z len height]
+  (->> (cube len 1.8 height :center false)
+       (m/translate [x y (+ z 9)])
+       paint-color))
+
+(defn slate-y [x y z len height]
+  (->> (cube 1.8 len height :center false)
+       (m/translate [x y (+ z 9)])
+       paint-color))
+
+(def slates
+  (union
+   (for [z [6 42.5 82]]
+     (slate-x 0 0 z 632 11))
+
+   (for [z [21 32 59 70]]
+     (slate-x 0 0 z 632 6.6))
+
+   (for [z [6 42.5 82]]
+     (slate-x 0 310 z 170 11))
+
+   (for [z [21 32 59 70]]
+     (slate-x 0 310 z 170 6.6))
+
+   (for [z [6 42.5 82]]
+     (slate-y 0 0 z 310 11))
+
+   (for [z [21 32 59 70]]
+     (slate-y 0 0 z 310 6.6))
+
+   (for [z [6 42.5 82]]
+     (slate-y 642 0 z 420 11))
+
+   (for [z [21 32 59 70]]
+     (slate-y 642 0 z 420 6.6))
+   (for [z [6 42.5 82]]
+     (slate-y 720 410 z 100 11))
+   (for [z [21 32 59 70]]
+     (slate-y 720 410 z 100 6.6))))
 
 (def deck
   (union
@@ -165,14 +214,14 @@
    (post kitchen-rc (- right-depth 9) -120)
    (post width (- left-depth 90 9) -150)
    (post (+ 90 width) (- left-depth 90 9) -150) ;; south-stair-south-post
-   (post (+ 90 (- width 9)) (- left-depth 9) -150)
+   (post (+ 90 width) (- left-depth 9) -150)
    ;;extra posts
    (post 0 130 -120 :fence? false)
    (post 210 130 -120 :fence? false)
    (post 420 130 -120 :fence? false)
    (post 632 130 -120 :fence? false)
 
-   (bearer)
+   (bearer :z -14)
    (bearer :y 130 :z -14)
    ;;(bearer :y 122.5 :z -14)
    (ledger 0 right-depth 170)
@@ -180,7 +229,7 @@
    (ledger kitchen-lc left-depth (+ left-width 90))
    (ledger width (- left-depth 90) 90)
    (hand-rail-x 0 0 width)
-   (hand-rail-x 0 (- right-depth 4.5) 170)
+   (hand-rail-x 0 (- right-depth 10) 180)
    (hand-rail-y 0 0 right-depth)
    (hand-rail-y (- width 4.5) 0 (- left-depth 90 9))
    (hand-rail-y (+ width 90) (- left-depth 90) 90)
@@ -188,6 +237,8 @@
    ;;(furniture)
    (joists)
    (decking-board)
+
+   slates
    ))
 
 (spit "post-demo.scad"
