@@ -11,6 +11,7 @@
 ;; 6.6 = 14x5.4
 ;; bunnings : 316.44 + 286 + 241.92 = 844.36
 ;; blackbutt : 75x6.98 = 524
+;; verticals 70x35: 112x7 = (1x6.0 + 1x2.4)
 
 (def treated-pine-color #(m/color [(/ 153 255) (/ 113 255) (/ 87 255) 1] %))
 
@@ -172,33 +173,34 @@
 
 (def slates
   (union
-   (for [z [6 42.5 82]]
-     (slate-x 0 0 z 632 11))
+   (for [z (range 3)]
+     (slate-x 0 0 (+ 8 (* z 13)) 632 11))
 
-   (for [z [21 32 59 70]]
-     (slate-x 0 0 z 632 6.6))
+   (for [z (range 4)]
+     (slate-x 0 0 (+ 50 (+ (* 11.6 z) )) 632 6.6))
 
-   (for [z [6 42.5 82]]
-     (slate-x 0 310 z 170 11))
+   (for [z (range 3)]
+     (slate-x 0 310 (+ 8 (* z 13)) 180 11))
 
-   (for [z [21 32 59 70]]
-     (slate-x 0 310 z 170 6.6))
+   (for [z (range 4)]
+     (slate-x 0 310 (+ 50 (+ (* 11.6 z) )) 180 6.6))
 
-   (for [z [6 42.5 82]]
-     (slate-y 0 0 z 310 11))
+   (for [z (range 3)]
+     (slate-y 0 0 (+ 8 (* z 13)) 310 11))
 
-   (for [z [21 32 59 70]]
-     (slate-y 0 0 z 310 6.6))
+   (for [z (range 4)]
+     (slate-y 0 0 (+ 50 (+ (* 11.6 z) )) 310 6.6))
 
-   (for [z [6 42.5 82]]
-     (slate-y 642 0 z 420 11))
+   (for [z (range 3)]
+     (slate-y 642 0 (+ 8 (* z 13)) 420 11))
 
-   (for [z [21 32 59 70]]
-     (slate-y 642 0 z 420 6.6))
-   (for [z [6 42.5 82]]
-     (slate-y 720 410 z 100 11))
-   (for [z [21 32 59 70]]
-     (slate-y 720 410 z 100 6.6))))
+   (for [z (range 4)]
+     (slate-y 642 0 (+ 50 (+ (* 11.6 z) )) 420 6.6))
+
+   (for [z (range 3)]
+     (slate-y 720 410 (+ 8 (* z 13)) 100 11))
+   (for [z (range 4)]
+     (slate-y 720 410 (+ 50 (+ (* 11.6 z) )) 100 6.6))))
 
 (def deck
   (union
